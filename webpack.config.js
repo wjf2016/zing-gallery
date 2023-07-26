@@ -1,33 +1,62 @@
-var webpack = require('webpack');
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
+const path = require('path');
+const webpack = require('webpack');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
+
+const resolve = (p) => path.resolve(__dirname, p);
+const { NODE_ENV } = process.env;
 
 module.exports = {
   entry: {
-    main: './assets/src/main.js',
+    main: resolve('./assets/src/main.js'),
   },
   output: {
-    path: './assets/dist',
+    path: resolve('./assets/dist'),
     publicPath: './',
     filename: '[name].js',
   },
+  mode: NODE_ENV,
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.css$/,
-        loader: ExtractTextPlugin.extract('style-loader', [
-          'css-loader?-autoprefixer',
-        ]),
+        use: [MiniCssExtractPlugin.loader, 'css-loader'],
       },
       {
         test: /\.(woff|svg|eot|ttf)\??.*$/,
-        loader: 'url-loader?limit=50000&name=[path][name].[ext]',
+        use: [
+          {
+            loader: 'url-loader',
+            options: {
+              limit: 50000,
+              name: '[path][name].[ext]',
+            },
+          },
+        ],
       },
       {
         test: /\.(gif|jpg|png)\??.*$/,
-        loader: 'file-loader?name=img/[name].[ext]',
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: 'img/[name].[ext]',
+            },
+          },
+        ],
       },
     ],
   },
-  plugins: [new ExtractTextPlugin('[name].css')],
-  watch: true,
+  plugins: [
+    new MiniCssExtractPlugin(),
+    new CopyPlugin({
+      patterns: [
+        {
+          from: resolve('./assets/src/img/avatar.png'),
+          to: resolve('./assets/dist/img/'),
+        },
+      ],
+    }),
+  ],
+  watch: NODE_ENV === 'development',
 };
